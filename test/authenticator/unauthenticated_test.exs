@@ -22,4 +22,3 @@ defmodule Authenticator.UnauthenticatedTest do
     end
   end
 end
-
