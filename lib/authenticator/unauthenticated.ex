@@ -19,7 +19,7 @@ defmodule Authenticator.Unauthenticated do
 
   @impl Plug
   def call(conn, authenticator) do
-    if authenticator.authenticated?(conn) do
+    if authenticator.signed_in?(conn) do
       authenticator.fallback(conn, :not_unauthenticated)
     else
       conn

@@ -39,6 +39,11 @@ defmodule Authenticator do
         |> Plug.Conn.delete_session(@scope)
       end
 
+      @spec signed_in?(Plug.Conn.t()) :: boolean()
+      def signed_in?(%Plug.Conn{} = conn) do
+        not is_nil(conn.assigns[@scope])
+      end
+
       @doc """
       Extract a token from the session and authenticate the resource.
       """
@@ -61,7 +66,9 @@ defmodule Authenticator do
         end
       end
 
-      defp do_authenticate(conn, nil), do: conn
+      defp do_authenticate(conn, nil) do
+        Plug.Conn.assign(conn, @scope, conn.assigns[@scope])
+      end
 
       defp do_authenticate(conn, token) do
         case authenticate(token) do
@@ -69,7 +76,9 @@ defmodule Authenticator do
             Plug.Conn.assign(conn, @scope, resource)
 
           {:error, reason} ->
-            fallback(conn, reason)
+            conn
+            |> do_authenticate(nil)
+            |> fallback(reason)
         end
       end
     end
