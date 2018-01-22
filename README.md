@@ -1,4 +1,4 @@
-# Authenticator
+# Authenticator [![Build Status](https://travis-ci.org/rzane/authenticator.svg?branch=master)](https://travis-ci.org/rzane/authenticator)
 
 This module provides the glue for authenticating HTTP requests.
 
@@ -42,7 +42,7 @@ defmodule MyAppWeb.Authenticator do
   use Authenticator
 
   import Phoenix.Controller
-  import MyApp.Router.Helpers
+  import MyAppWeb.Router.Helpers
 
   alias MyApp.Repo
   alias MyApp.Accounts.User
@@ -54,7 +54,7 @@ defmodule MyAppWeb.Authenticator do
 
   @impl true
   def authenticate(user_id) do
-    case Repo.get(User) do
+    case Repo.get(User, user_id) do
       nil ->
         {:error, :not_found}
 
@@ -87,8 +87,6 @@ end
 
 All of the plugs provided by `Authenticator` expect your app's authenticator as an argument.
 
-Make sure you use either `Authenticator.Session` or `Authenticator.Header`
-
 ```elixir
 pipeline :browser do
   # snip...
@@ -97,7 +95,7 @@ pipeline :browser do
 end
 
 pipeline :authenticated do
-  plug Authenticator.Authenticated, MyAppWeb.Authenticated
+  plug Authenticator.Authenticated, MyAppWeb.Authenticator
 end
 
 scope "/", MyAppWeb do
