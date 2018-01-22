@@ -26,7 +26,7 @@ defmodule Authenticator do
 
           {:error, reason} ->
             conn
-            |> do_authenticate(nil)
+            |> sign_out()
             |> fallback(reason)
         end
       end
@@ -51,7 +51,13 @@ defmodule Authenticator do
       """
       @spec authenticate_session(Plug.Conn.t()) :: Plug.Conn.t()
       def authenticate_session(conn) do
-        do_authenticate(conn, Plug.Conn.get_session(conn, @scope))
+        case Plug.Conn.get_session(conn, @scope) do
+          nil ->
+            ensure_assigned(conn)
+
+          token ->
+            do_authenticate(conn, token)
+        end
       end
 
       @doc """
@@ -64,11 +70,12 @@ defmodule Authenticator do
             do_authenticate(conn, token)
 
           _ ->
-            do_authenticate(conn, nil)
+            ensure_assigned(conn)
         end
       end
 
-      defp do_authenticate(conn, nil) do
+      # Make sure `@current_user` is set.
+      defp ensure_assigned(conn) do
         Plug.Conn.assign(conn, @scope, conn.assigns[@scope])
       end
 
@@ -79,7 +86,7 @@ defmodule Authenticator do
 
           {:error, reason} ->
             conn
-            |> do_authenticate(nil)
+            |> sign_out()
             |> fallback(reason)
         end
       end
