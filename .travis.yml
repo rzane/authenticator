@@ -1,0 +1,16 @@
+language: elixir
+cache:
+  directories:
+    - $HOME/.mix
+
+elixir:
+  - 1.6.0
+
+otp_release:
+  - 20.1
+
+script:
+  - mix format --check-formatted
+  - mix compile --warnings-as-errors --force
+  - mix docs
+  - mix test
