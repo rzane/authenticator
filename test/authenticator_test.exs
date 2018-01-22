@@ -16,18 +16,9 @@ defmodule AuthenticatorTest do
   end
 
   describe "sign_in/2 when tokenize/1 fails" do
-    setup %{conn: conn} do
-      [conn: Success.sign_in(conn, "foobar")]
-    end
-
-    test "clears the scope", %{conn: conn} do
+    test "invokes the fallback", %{conn: conn} do
       conn = Failure.sign_in(conn, "foobar")
-      assert conn.assigns.current_user == nil
-    end
-
-    test "clears the session", %{conn: conn} do
-      conn = Failure.sign_in(conn, "foobar")
-      assert get_session(conn, :current_user) == nil
+      assert conn.private.reason == :tokenize
     end
   end
 
@@ -44,6 +35,17 @@ defmodule AuthenticatorTest do
     test "clears the session", %{conn: conn} do
       conn = Success.sign_out(conn)
       assert get_session(conn, :current_user) == nil
+    end
+  end
+
+  describe "signed_in?/1" do
+    test "when the user is not set", %{conn: conn} do
+      refute Success.signed_in?(conn)
+    end
+
+    test "when the user is set", %{conn: conn} do
+      conn = Success.sign_in(conn, "foobar")
+      assert Success.signed_in?(conn)
     end
   end
 
@@ -64,6 +66,7 @@ defmodule AuthenticatorTest do
         |> Failure.authenticate_session()
 
       assert conn.assigns.current_user == nil
+      assert conn.private.reason == :authenticate
     end
 
     test "no session", %{conn: conn} do
@@ -89,6 +92,7 @@ defmodule AuthenticatorTest do
         |> Failure.authenticate_header()
 
       assert conn.assigns.current_user == nil
+      assert conn.private.reason == :authenticate
     end
 
     test "no header", %{conn: conn} do

@@ -24,8 +24,10 @@ defmodule Authenticator do
             |> Plug.Conn.assign(@scope, resource)
             |> Plug.Conn.put_session(@scope, token)
 
-          :error ->
-            sign_out(conn)
+          {:error, reason} ->
+            conn
+            |> do_authenticate(nil)
+            |> fallback(reason)
         end
       end
 

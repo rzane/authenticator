@@ -6,6 +6,11 @@ defmodule Authenticator.Fixtures.Success do
 
   @impl true
   def authenticate(value), do: {:ok, value}
+
+  @impl true
+  def fallback(conn, reason) do
+    Plug.Conn.put_private(conn, :reason, reason)
+  end
 end
 
 defmodule Authenticator.Fixtures.Failure do
@@ -19,7 +24,6 @@ defmodule Authenticator.Fixtures.Failure do
 
   @impl true
   def fallback(conn, reason) do
-    conn
-    |> put_private(:reason, reason)
+    Plug.Conn.put_private(conn, :reason, reason)
   end
 end
