@@ -37,7 +37,7 @@ defmodule MyAppWeb.Authenticator do
     |> redirect(to: root_path(conn))
   end
 
-  def fallback(conn, :not_unathenticated) do
+  def fallback(conn, :not_unauthenticated) do
     conn
     |> put_flash(:error, "You are already signed in.")
     |> redirect(to: root_path(conn))
