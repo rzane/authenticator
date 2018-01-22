@@ -109,6 +109,7 @@ defmodule Authenticator do
       @doc """
       Make sure `conn.assigns.#{@scope}` has been set.
       """
+      @spec assign(Plug.Conn.t()) :: Plug.Conn.t()
       def assign(conn) do
         assign(conn, conn.assigns[@scope])
       end
@@ -116,6 +117,7 @@ defmodule Authenticator do
       @doc """
       Set the vaue of `conn.assigns.#{@scope}`.
       """
+      @spec assign(Plug.Conn.t(), Authenticator.resource()) :: Plug.Conn.t()
       def assign(conn, resource) do
         Plug.Conn.assign(conn, @scope, resource)
       end
