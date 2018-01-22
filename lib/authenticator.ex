@@ -1,11 +1,10 @@
 defmodule Authenticator do
   @type resource :: any()
   @type token :: String.t()
-  @type reason :: atom()
 
-  @callback tokenize(resource) :: {:ok, token} | {:error, reason}
-  @callback authenticate(token) :: {:ok, resource} | {:error, reason}
-  @callback fallback(Plug.Conn.t(), reason) :: Plug.Conn.t()
+  @callback tokenize(resource) :: {:ok, token} | {:error, reason :: atom()}
+  @callback authenticate(token) :: {:ok, resource} | {:error, reason :: atom()}
+  @callback fallback(conn :: Plug.Conn.t(), reason :: atom()) :: Plug.Conn.t()
 
   defmacro __using__(config) do
     quote location: :keep do
@@ -54,7 +53,7 @@ defmodule Authenticator do
       end
 
       @doc """
-      Check if there is a #{inspect(@scope)}.
+      Check to see if there is a #{inspect(@scope)} signed in.
       """
       @spec signed_in?(Plug.Conn.t()) :: boolean()
       def signed_in?(%Plug.Conn{} = conn) do

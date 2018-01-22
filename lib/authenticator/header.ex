@@ -1,6 +1,11 @@
 defmodule Authenticator.Header do
   @moduledoc """
-  Authenticates the user from the authorization header.
+  A plug that authenticates a resource from the `Authorization` header. The
+  header is expected to conform to the following format:
+
+      Bearer <token>
+
+  If the header is not present or has an invalid format, this plug won't do anything.
 
   ## Examples
 

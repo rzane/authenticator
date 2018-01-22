@@ -8,7 +8,8 @@ defmodule Authenticator.Mixfile do
       elixir: "~> 1.5",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      docs: [extras: ["README.md"]]
     ]
   end
 
@@ -25,6 +26,9 @@ defmodule Authenticator.Mixfile do
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
-    [{:plug, ">= 0.0.0"}]
+    [
+      {:plug, ">= 0.0.0"},
+      {:ex_doc, ">= 0.0.0", only: [:dev, :test]}
+    ]
   end
 end
