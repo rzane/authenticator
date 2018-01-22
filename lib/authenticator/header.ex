@@ -22,6 +22,12 @@ defmodule Authenticator.Header do
 
   @impl Plug
   def call(conn, authenticator) do
-    authenticator.authenticate_header(conn)
+    case Plug.Conn.get_req_header(conn, "authorization") do
+      ["Bearer " <> token] ->
+        authenticator.call(conn, token)
+
+      _ ->
+        authenticator.assign(conn)
+    end
   end
 end

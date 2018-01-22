@@ -15,6 +15,16 @@ You'll also get the following plugs:
 * `Authenticator.Authenticated` - Make sure a user is signed in.
 * `Authenticator.Unauthenticated` - Make sure a user is *not* signed in.
 
+## Installation
+
+The package can be installed by adding `authenticator` to your list of dependencies in `mix.exs`:
+
+```elixir
+def deps do
+  [{:authenticator, "~> 0.1.0"}]
+end
+```
+
 ## Usage
 
 To use `Authenticator`, you'll need to define the following functions:
@@ -26,6 +36,8 @@ To use `Authenticator`, you'll need to define the following functions:
 Here's an example implementation of an authenticator:
 
 ```elixir
+# lib/my_app_web/authenticator.ex
+
 defmodule MyAppWeb.Authenticator do
   use Authenticator
 
@@ -71,18 +83,26 @@ defmodule MyAppWeb.Authenticator do
 end
 ```
 
-## Installation
+## Plugs
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `authenticator` to your list of dependencies in `mix.exs`:
+All of the plugs provided by `Authenticator` expect your app's authenticator as an argument.
+
+Make sure you use either `Authenticator.Session` or `Authenticator.Header`
 
 ```elixir
-def deps do
-  [{:authenticator, "~> 0.1.0"} ]
+pipeline :browser do
+  # snip...
+
+  plug Authenticator.Session, MyAppWeb.Authenticator
+end
+
+pipeline :authenticated do
+  plug Authenticator.Authenticated, MyAppWeb.Authenticated
+end
+
+scope "/", MyAppWeb do
+  pipe_through([:browser, :authenticated])
+
+  # declare protected routes here
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/authenticator](https://hexdocs.pm/authenticator).
-

@@ -2,16 +2,22 @@ defmodule Authenticator.SessionTest do
   use Authenticator.ConnCase, async: true
 
   alias Authenticator.Session
-  alias Authenticator.Fixtures.Success
+  alias Authenticator.Fixtures.{Success, Failure}
 
   describe "when the session is set" do
     setup %{conn: conn} do
       [conn: Plug.Conn.put_session(conn, :current_user, "foobar")]
     end
 
-    test "sets the user", %{conn: conn} do
+    test "successful authentication", %{conn: conn} do
       conn = Session.call(conn, Success)
       assert conn.assigns.current_user == "foobar"
+    end
+
+    test "unsuccessful authentication", %{conn: conn} do
+      conn = Session.call(conn, Failure)
+      refute conn.assigns.current_user
+      assert conn.private.reason == :authenticate
     end
   end
 
@@ -19,6 +25,7 @@ defmodule Authenticator.SessionTest do
     test "sets the user to nil", %{conn: conn} do
       conn = Session.call(conn, Success)
       assert conn.assigns.current_user == nil
+      refute conn.private[:reason]
     end
   end
 end

@@ -17,6 +17,12 @@ defmodule Authenticator.Session do
 
   @impl Plug
   def call(conn, authenticator) do
-    authenticator.authenticate_session(conn)
+    case authenticator.get_session(conn) do
+      nil ->
+        authenticator.assign(conn)
+
+      token ->
+        authenticator.call(conn, token)
+    end
   end
 end

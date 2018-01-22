@@ -49,55 +49,16 @@ defmodule AuthenticatorTest do
     end
   end
 
-  describe "authenticate_session/1" do
+  describe "call/2" do
     test "user is authenticated", %{conn: conn} do
-      conn =
-        conn
-        |> put_session(:current_user, "foobar")
-        |> Success.authenticate_session()
-
+      conn = Success.call(conn, "foobar")
       assert conn.assigns.current_user == "foobar"
     end
 
     test "user is not authenticated", %{conn: conn} do
-      conn =
-        conn
-        |> put_session(:current_user, "foobar")
-        |> Failure.authenticate_session()
-
+      conn = Failure.call(conn, "foobar")
       assert conn.assigns.current_user == nil
       assert conn.private.reason == :authenticate
-    end
-
-    test "no session", %{conn: conn} do
-      conn = Success.authenticate_session(conn)
-      assert conn.assigns.current_user == nil
-    end
-  end
-
-  describe "authenticate_token/1" do
-    test "user is authenticated", %{conn: conn} do
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer foobar")
-        |> Success.authenticate_header()
-
-      assert conn.assigns.current_user == "foobar"
-    end
-
-    test "user is not authenticated", %{conn: conn} do
-      conn =
-        conn
-        |> put_req_header("authorization", "Bearer foobar")
-        |> Failure.authenticate_header()
-
-      assert conn.assigns.current_user == nil
-      assert conn.private.reason == :authenticate
-    end
-
-    test "no header", %{conn: conn} do
-      conn = Success.authenticate_header(conn)
-      assert conn.assigns.current_user == nil
     end
   end
 end
