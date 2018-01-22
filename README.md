@@ -4,6 +4,8 @@
 defmodule MyAppWeb.Authenticator do
   use Authenticator
 
+  import Phoenix.Controller
+
   alias MyApp.Repo
   alias MyApp.Accounts.User
 
@@ -16,11 +18,29 @@ defmodule MyAppWeb.Authenticator do
   def authenticate(user_id) do
     case Repo.get(User) do
       nil ->
-        :error
+        {:error, :not_found}
 
       user ->
         {:ok, user}
     end
+  end
+
+  @impl true
+  def fallback(conn, :not_found) do
+    conn
+    |> redirect(to: login_path(conn))
+  end
+
+  def fallback(conn, :not_authenticated) do
+    conn
+    |> put_flash(:error, "You must be signed in.")
+    |> redirect(to: root_path(conn))
+  end
+
+  def fallback(conn, :not_unathenticated) do
+    conn
+    |> put_flash(:error, "You are already signed in.")
+    |> redirect(to: root_path(conn))
   end
 end
 ```

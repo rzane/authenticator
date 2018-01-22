@@ -12,8 +12,14 @@ defmodule Authenticator.Fixtures.Failure do
   use Authenticator
 
   @impl true
-  def tokenize(_), do: :error
+  def tokenize(_), do: {:error, :tokenize}
 
   @impl true
-  def authenticate(_), do: :error
+  def authenticate(_), do: {:error, :authenticate}
+
+  @impl true
+  def fallback(conn, reason) do
+    conn
+    |> put_private(:reason, reason)
+  end
 end

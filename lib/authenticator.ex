@@ -1,9 +1,11 @@
 defmodule Authenticator do
   @type resource :: any()
   @type token :: String.t()
+  @type reason :: atom()
 
-  @callback tokenize(resource) :: {:ok, token} | :error
-  @callback authenticate(token) :: {:ok, resource} | :error
+  @callback tokenize(resource) :: {:ok, token} | {:error, reason}
+  @callback authenticate(token) :: {:ok, resource} | {:error, reason}
+  @callback fallback(Plug.Conn.t(), reason) :: Plug.Conn.t()
 
   defmacro __using__(config) do
     quote location: :keep do
@@ -59,17 +61,15 @@ defmodule Authenticator do
         end
       end
 
-      defp do_authenticate(conn, nil) do
-        Plug.Conn.assign(conn, @scope, nil)
-      end
+      defp do_authenticate(conn, nil), do: conn
 
       defp do_authenticate(conn, token) do
         case authenticate(token) do
           {:ok, resource} ->
             Plug.Conn.assign(conn, @scope, resource)
 
-          :error ->
-            Plug.Conn.assign(conn, @scope, nil)
+          {:error, reason} ->
+            fallback(conn, reason)
         end
       end
     end
