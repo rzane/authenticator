@@ -23,7 +23,7 @@ defmodule Authenticator.Header do
   @impl Plug
   def call(conn, opts) do
     authenticator = Keyword.fetch!(opts, :with)
-    
+
     case Plug.Conn.get_req_header(conn, "authorization") do
       ["Bearer " <> token] ->
         authenticator.call(conn, token)

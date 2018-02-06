@@ -20,7 +20,7 @@ defmodule Authenticator.Unauthenticated do
   @impl Plug
   def call(conn, opts) do
     authenticator = Keyword.fetch!(opts, :with)
-    
+
     if authenticator.signed_in?(conn) do
       authenticator.fallback(conn, :not_unauthenticated)
     else
