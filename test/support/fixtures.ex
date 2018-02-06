@@ -41,6 +41,7 @@ end
 
 defmodule Authenticator.Fixtures.Authority do
   use Authenticator
+
   use Authenticator.Authority,
     token_schema: Authenticator.Fixtures.Token,
     tokenization: Authenticator.Fixtures.Accounts,
