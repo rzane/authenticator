@@ -65,20 +65,21 @@ defmodule MyAppWeb.Authenticator do
 
   @impl true
   def fallback(conn, :not_found) do
-    conn
-    |> redirect(to: login_path(conn))
+    conn |> redirect(to: login_path(conn)) |> halt()
   end
 
   def fallback(conn, :not_authenticated) do
     conn
-    |> put_flash(:error, "You must be signed in.")
-    |> redirect(to: root_path(conn))
+    |> put_flash(:error, "You need to sign in to continue.")
+    |> redirect(to: login_path(conn))
+    |> halt()
   end
 
   def fallback(conn, :not_unauthenticated) do
     conn
     |> put_flash(:error, "You are already signed in.")
     |> redirect(to: root_path(conn))
+    |> halt()
   end
 end
 ```
@@ -104,3 +105,37 @@ scope "/", MyAppWeb do
   # declare protected routes here
 end
 ```
+
+## Usage with Authority
+
+`Authenticator` works really well with [`Authority`](https://github.com/infinitered/authority) and [`Authority.Ecto`](https://github.com/infinitered/authority_ecto).
+
+Here's an example of an `Authenticator` that works with `Authority`:
+
+```elixir
+defmodule MyAppWeb.Authenticator do
+  use Authenticator
+  import Plug.Conn
+
+  alias MyApp.{Accounts, Accounts.User, Accounts.Token}
+
+  @impl true
+  def tokenize(user) do
+    with {:ok, token} <- Accounts.tokenize(user) do
+      {:ok, token.token}
+    end
+  end
+
+  @impl true
+  def authenticate(token) when is_binary(token) do
+    Accounts.authenticate(%Token{token: token})
+  end
+
+  @impl true
+  def fallback(conn, _reason) do
+    conn |> redirect(to: "/login") |> halt()
+  end
+end
+```
+
+> *Note:* In the above example, we're serializing the user into a token. If you're using `Authority.Ecto`, tokens are stored in the database. The benefit of using a token (as opposed to the user's ID), is that we can revoke specific sessions by deleting tokens from the database.
