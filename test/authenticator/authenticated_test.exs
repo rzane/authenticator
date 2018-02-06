@@ -10,14 +10,14 @@ defmodule Authenticator.AuthenticatedTest do
     end
 
     test "passes thru", %{conn: conn} do
-      conn = Authenticated.call(conn, Success)
+      conn = Authenticated.call(conn, with: Success)
       refute conn.private[:reason]
     end
   end
 
   describe "when the user is not signed in" do
     test "invokes the fallback with :not_authenticated", %{conn: conn} do
-      conn = Authenticated.call(conn, Success)
+      conn = Authenticated.call(conn, with: Success)
       assert conn.private.reason == :not_authenticated
     end
   end

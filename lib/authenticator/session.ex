@@ -4,19 +4,21 @@ defmodule Authenticator.Session do
 
   ## Examples
 
-      plug Authenticator.Session, MyAppWeb.Authenticator
+      plug Authenticator.Session, with: MyAppWeb.Authenticator
 
   """
 
   @behaviour Plug
 
   @impl true
-  def init(authenticator) do
-    authenticator
+  def init(opts) do
+    opts
   end
 
   @impl Plug
-  def call(conn, authenticator) do
+  def call(conn, opts) do
+    authenticator = Keyword.fetch!(opts, :with)
+
     case authenticator.get_session(conn) do
       nil ->
         authenticator.assign(conn)

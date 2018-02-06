@@ -9,19 +9,21 @@ defmodule Authenticator.Header do
 
   ## Examples
 
-      plug Authenticator.Header, MyAppWeb.Authenticator
+      plug Authenticator.Header, with: MyAppWeb.Authenticator
 
   """
 
   @behaviour Plug
 
   @impl Plug
-  def init(authenticator) do
-    authenticator
+  def init(opts) do
+    opts
   end
 
   @impl Plug
-  def call(conn, authenticator) do
+  def call(conn, opts) do
+    authenticator = Keyword.fetch!(opts, :with)
+    
     case Plug.Conn.get_req_header(conn, "authorization") do
       ["Bearer " <> token] ->
         authenticator.call(conn, token)

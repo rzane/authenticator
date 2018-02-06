@@ -10,12 +10,12 @@ defmodule Authenticator.SessionTest do
     end
 
     test "successful authentication", %{conn: conn} do
-      conn = Session.call(conn, Success)
+      conn = Session.call(conn, with: Success)
       assert conn.assigns.current_user == "foobar"
     end
 
     test "unsuccessful authentication", %{conn: conn} do
-      conn = Session.call(conn, Failure)
+      conn = Session.call(conn, with: Failure)
       refute conn.assigns.current_user
       assert conn.private.reason == :authenticate
     end
@@ -23,7 +23,7 @@ defmodule Authenticator.SessionTest do
 
   describe "when the header is not set" do
     test "sets the user to nil", %{conn: conn} do
-      conn = Session.call(conn, Success)
+      conn = Session.call(conn, with: Success)
       assert conn.assigns.current_user == nil
       refute conn.private[:reason]
     end

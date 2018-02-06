@@ -6,19 +6,19 @@ defmodule Authenticator.Authenticated do
 
   ## Examples
 
-      plug Authenticator.Authenticated, MyAppWeb.Authenticator
+      plug Authenticator.Authenticated, with: MyAppWeb.Authenticator
 
   """
 
   @behaviour Plug
 
   @impl Plug
-  def init(authenticator) do
-    authenticator
-  end
+  def init(opts), do: opts
 
   @impl Plug
-  def call(conn, authenticator) do
+  def call(conn, opts) do
+    authenticator = Keyword.fetch!(opts, :with)
+
     if authenticator.signed_in?(conn) do
       conn
     else
