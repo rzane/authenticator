@@ -108,32 +108,23 @@ end
 
 ## Usage with Authority
 
-`Authenticator` works really well with [`Authority`](https://github.com/infinitered/authority) and [`Authority.Ecto`](https://github.com/infinitered/authority_ecto).
+`Authenticator` supports [`Authority`](https://github.com/infinitered/authority) and [`Authority.Ecto`](https://github.com/infinitered/authority_ecto) out of the box.
 
-Here's an example of an `Authenticator` that works with `Authority`:
+Here's an example authenticator that takes advantage of `Autenticator.Authority`:
 
 ```elixir
 defmodule MyAppWeb.Authenticator do
   use Authenticator
-  import Plug.Conn
-
-  alias MyApp.{Accounts, Accounts.User, Accounts.Token}
-
-  @impl true
-  def tokenize(user) do
-    with {:ok, token} <- Accounts.tokenize(user) do
-      {:ok, token.token}
-    end
-  end
-
-  @impl true
-  def authenticate(token) when is_binary(token) do
-    Accounts.authenticate(%Token{token: token})
-  end
+  use Authenticator.Authority,
+    token_schema: Accounts.Token,
+    tokenization: Accounts,
+    authentication: Accounts
 
   @impl true
   def fallback(conn, _reason) do
-    conn |> redirect(to: "/login") |> halt()
+    conn
+    |> Plug.Conn.redirect(to: "/login")
+    |> Plug.Conn.halt()
   end
 end
 ```

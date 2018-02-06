@@ -1,10 +1,11 @@
 defmodule Authenticator do
   @type resource :: any()
   @type token :: String.t()
+  @type reason :: atom()
 
-  @callback tokenize(resource) :: {:ok, token} | {:error, reason :: atom()}
-  @callback authenticate(token) :: {:ok, resource} | {:error, reason :: atom()}
-  @callback fallback(conn :: Plug.Conn.t(), reason :: atom()) :: Plug.Conn.t()
+  @callback tokenize(resource) :: {:ok, token} | {:error, reason}
+  @callback authenticate(token) :: {:ok, resource} | {:error, reason}
+  @callback fallback(conn :: Plug.Conn.t(), reason) :: Plug.Conn.t()
 
   defmacro __using__(config) do
     quote location: :keep do
