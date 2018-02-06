@@ -92,11 +92,11 @@ All of the plugs provided by `Authenticator` expect your app's authenticator as 
 pipeline :browser do
   # snip...
 
-  plug Authenticator.Session, MyAppWeb.Authenticator
+  plug Authenticator.Session, with: MyAppWeb.Authenticator
 end
 
 pipeline :authenticated do
-  plug Authenticator.Authenticated, MyAppWeb.Authenticator
+  plug Authenticator.Authenticated, with: MyAppWeb.Authenticator
 end
 
 scope "/", MyAppWeb do
