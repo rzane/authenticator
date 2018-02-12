@@ -33,7 +33,7 @@ defmodule Authenticator.Fixtures.Token do
 end
 
 defmodule Authenticator.Fixtures.Accounts do
-  alias Authenticators.Fixtures.Token
+  alias Authenticator.Fixtures.Token
 
   def authenticate(value), do: {:ok, value.token}
   def tokenize(value), do: {:ok, %Token{token: value}}
