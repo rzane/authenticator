@@ -9,7 +9,8 @@ defmodule Authenticator.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      docs: [extras: ["README.md"]]
+      docs: [extras: ["README.md"]],
+      package: package()
     ]
   end
 
@@ -17,6 +18,15 @@ defmodule Authenticator.Mixfile do
   def application do
     [
       extra_applications: [:logger]
+    ]
+  end
+
+  defp package do
+    [
+      description: "Provides the glue for authenticating HTTP requests.",
+      maintainers: ["Ray Zane"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/rzane/authenticator"}
     ]
   end
 
