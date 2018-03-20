@@ -48,6 +48,5 @@ defmodule Authenticator.Fixtures.Authority do
     authentication: Authenticator.Fixtures.Accounts
 
   @impl true
-  def fallback(conn, _reason) do
-  end
+  def fallback(conn, _reason), do: conn
 end

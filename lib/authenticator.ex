@@ -24,7 +24,7 @@ defmodule Authenticator do
       def call(conn, token) do
         case authenticate(token) do
           {:ok, resource} ->
-            assign(conn, resource)
+            Plug.Conn.assign(conn, @scope, resource)
 
           {:error, reason} ->
             conn
@@ -44,8 +44,14 @@ defmodule Authenticator do
         case tokenize(resource) do
           {:ok, token} ->
             conn
-            |> assign(resource)
-            |> put_session(token)
+            |> Plug.Conn.assign(@scope, resource)
+            |> case do
+              %Plug.Conn{private: %{plug_session: _}} = conn ->
+                Plug.Conn.put_session(conn, @scope, token)
+
+              conn ->
+                conn
+            end
 
           {:error, reason} ->
             conn
@@ -61,8 +67,14 @@ defmodule Authenticator do
       @spec sign_out(Plug.Conn.t()) :: Plug.Conn.t()
       def sign_out(%Plug.Conn{} = conn) do
         conn
-        |> assign(nil)
-        |> delete_session()
+        |> Plug.Conn.assign(@scope, nil)
+        |> case do
+          %Plug.Conn{private: %{plug_session: _}} = conn ->
+            Plug.Conn.delete_session(conn, @scope)
+
+          conn ->
+            conn
+        end
       end
 
       @doc """
@@ -74,57 +86,49 @@ defmodule Authenticator do
       end
 
       @doc """
-      Gets the token from the session.
+      Verify that the conn is authenticated
       """
-      @spec get_session(Plug.Conn.t()) :: any()
-      def get_session(conn) do
-        if session_configured?(conn) do
-          Plug.Conn.get_session(conn, @scope)
+      @spec ensure_authenticated(Plug.Conn.t()) :: Plug.Conn.t()
+      def ensure_authenticated(%Plug.Conn{} = conn) do
+        if signed_in?(conn) do
+          conn
+        else
+          fallback(conn, :not_authenticated)
         end
       end
 
-      @doc """
-      Deletes the token from the session.
-      """
-      @spec delete_session(Plug.Conn.t()) :: Plug.Conn.t()
-      def delete_session(conn) do
-        if session_configured?(conn) do
-          Plug.Conn.delete_session(conn, @scope)
+      @doc "Verify that the conn is unauthenticated"
+      @spec ensure_unauthenticated(Plug.Conn.t()) :: Plug.Conn.t()
+      def ensure_unauthenticated(%Plug.Conn{} = conn) do
+        if signed_in?(conn) do
+          fallback(conn, :not_unauthenticated)
         else
           conn
         end
       end
 
-      @doc """
-      Sets the token in the session.
-      """
-      @spec put_session(Plug.Conn.t(), any()) :: Plug.Conn.t()
-      def put_session(conn, token) do
-        if session_configured?(conn) do
-          Plug.Conn.put_session(conn, @scope, token)
-        else
-          conn
+      @doc "Get the authorization header from the request"
+      @spec authenticate_header(Plug.Conn.t()) :: Plug.Conn.t()
+      def authenticate_header(%Plug.Conn{} = conn) do
+        case Plug.Conn.get_req_header(conn, "authorization") do
+          ["Bearer " <> token] ->
+            call(conn, token)
+
+          _ ->
+            Plug.Conn.assign(conn, @scope, conn.assigns[@scope])
         end
       end
 
-      @doc """
-      Make sure `conn.assigns.#{@scope}` has been set.
-      """
-      @spec assign(Plug.Conn.t()) :: Plug.Conn.t()
-      def assign(conn) do
-        assign(conn, conn.assigns[@scope])
-      end
+      @doc "Fetch the token from the session"
+      @spec authenticate_session(Plug.Conn.t()) :: Plug.Conn.t()
+      def authenticate_session(%Plug.Conn{} = conn) do
+        case Plug.Conn.get_session(conn, @scope) do
+          nil ->
+            Plug.Conn.assign(conn, @scope, conn.assigns[@scope])
 
-      @doc """
-      Set the vaue of `conn.assigns.#{@scope}`.
-      """
-      @spec assign(Plug.Conn.t(), Authenticator.resource()) :: Plug.Conn.t()
-      def assign(conn, resource) do
-        Plug.Conn.assign(conn, @scope, resource)
-      end
-
-      defp session_configured?(conn) do
-        Map.has_key?(conn.private, :plug_session)
+          token ->
+            call(conn, token)
+        end
       end
     end
   end

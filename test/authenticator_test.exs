@@ -61,4 +61,91 @@ defmodule AuthenticatorTest do
       assert conn.private.reason == :authenticate
     end
   end
+
+  describe "ensure_authenticated/1 - signed in" do
+    setup %{conn: conn} do
+      [conn: Success.sign_in(conn, "foobar")]
+    end
+
+    test "passes thru", %{conn: conn} do
+      conn = Success.sign_in(conn, "foobar")
+      conn = Success.ensure_authenticated(conn)
+      refute conn.private[:reason]
+    end
+  end
+
+  describe "ensure_authenticated/1 - not signed in" do
+    test "invokes the fallback with :not_authenticated", %{conn: conn} do
+      conn = Success.ensure_authenticated(conn)
+      assert conn.private.reason == :not_authenticated
+    end
+  end
+
+  describe "authenticate_header/1 - header is set" do
+    setup %{conn: conn} do
+      [conn: Plug.Conn.put_req_header(conn, "authorization", "Bearer foobar")]
+    end
+
+    test "successful authentication", %{conn: conn} do
+      conn = Success.authenticate_header(conn)
+      assert conn.assigns.current_user == "foobar"
+    end
+
+    test "unsuccessful authentication", %{conn: conn} do
+      conn = Failure.authenticate_header(conn)
+      refute conn.assigns.current_user
+      assert conn.private.reason == :authenticate
+    end
+  end
+
+  describe "authenticate_header/1 - header is not set" do
+    test "sets the user to nil", %{conn: conn} do
+      conn = Success.authenticate_header(conn)
+      assert conn.assigns.current_user == nil
+      refute conn.private[:reason]
+    end
+  end
+
+  describe "authenticate_session/1 - session is set" do
+    setup %{conn: conn} do
+      [conn: Plug.Conn.put_session(conn, :current_user, "foobar")]
+    end
+
+    test "successful authentication", %{conn: conn} do
+      conn = Success.authenticate_session(conn)
+      assert conn.assigns.current_user == "foobar"
+    end
+
+    test "unsuccessful authentication", %{conn: conn} do
+      conn = Failure.authenticate_session(conn)
+      refute conn.assigns.current_user
+      assert conn.private.reason == :authenticate
+    end
+  end
+
+  describe "authenticate_session/1 - header is not set" do
+    test "sets the user to nil", %{conn: conn} do
+      conn = Success.authenticate_session(conn)
+      assert conn.assigns.current_user == nil
+      refute conn.private[:reason]
+    end
+  end
+
+  describe "ensure_unauthenticated/1 - signed in" do
+    setup %{conn: conn} do
+      [conn: Success.sign_in(conn, "foobar")]
+    end
+
+    test "invokes the fallback with :not_unauthenticated", %{conn: conn} do
+      conn = Success.ensure_unauthenticated(conn)
+      assert conn.private.reason == :not_unauthenticated
+    end
+  end
+
+  describe "ensure_unauthenticated/1 - not signed in" do
+    test "passes thru", %{conn: conn} do
+      conn = Success.ensure_unauthenticated(conn)
+      refute conn.private[:reason]
+    end
+  end
 end
