@@ -8,8 +8,9 @@ defmodule Authenticator.AuthorityTest do
     assert conn.assigns.current_user == "foobar"
   end
 
-  test "call/2", %{conn: conn} do
-    conn = Authority.call(conn, "foobar")
+  test "authenticate_header/2", %{conn: conn} do
+    conn = Plug.Conn.put_req_header(conn, "authorization", "Bearer foobar")
+    conn = Authority.authenticate_header(conn)
     assert conn.assigns.current_user == "foobar"
   end
 end

@@ -49,19 +49,6 @@ defmodule AuthenticatorTest do
     end
   end
 
-  describe "call/2" do
-    test "user is authenticated", %{conn: conn} do
-      conn = Success.call(conn, "foobar")
-      assert conn.assigns.current_user == "foobar"
-    end
-
-    test "user is not authenticated", %{conn: conn} do
-      conn = Failure.call(conn, "foobar")
-      assert conn.assigns.current_user == nil
-      assert conn.private.reason == :authenticate
-    end
-  end
-
   describe "ensure_authenticated/1 - signed in" do
     setup %{conn: conn} do
       [conn: Success.sign_in(conn, "foobar")]
