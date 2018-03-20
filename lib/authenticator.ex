@@ -14,9 +14,9 @@ defmodule Authenticator do
       @scope Keyword.get(unquote(config), :scope, :current_user)
 
       @doc """
-      Stores the `#{inspect(@scope)}` in the session and sets `conn.assigns.#{@scope}`.
+      Stores the `#{@scope}` in the session and sets `conn.assigns.#{@scope}`.
 
-      If `tokenize/1` fails with `{:error, reason}`, the #{inspect(@scope)} will be
+      If `tokenize/1` fails with `{:error, reason}`, the #{@scope} will be
       signed out and `fallback/2` will be invoked.
 
       ## Options
@@ -45,7 +45,7 @@ defmodule Authenticator do
       end
 
       @doc """
-      Deletes the `#{inspect(@scope)}` from the session and sets `conn.assigns.#{@scope}`
+      Deletes the `#{@scope}` from the session and sets `conn.assigns.#{@scope}`
       to `nil`.
 
       ## Options
@@ -67,7 +67,7 @@ defmodule Authenticator do
       end
 
       @doc """
-      Check to see if there is a #{inspect(@scope)} signed in.
+      Check to see if there is a `#{@scope}` signed in.
       """
       @spec signed_in?(Plug.Conn.t()) :: boolean()
       def signed_in?(%Plug.Conn{} = conn) do
@@ -80,7 +80,7 @@ defmodule Authenticator do
       be called with a reason of `:not_authenticated`.
       """
       @spec ensure_authenticated(Plug.Conn.t()) :: Plug.Conn.t()
-      def ensure_authenticated(%Plug.Conn{} = conn) do
+      def ensure_authenticated(%Plug.Conn{} = conn, _opts \\ []) do
         if signed_in?(conn) do
           conn
         else
@@ -94,7 +94,7 @@ defmodule Authenticator do
       be called with a reason of `:not_unauthenticated`.
       """
       @spec ensure_unauthenticated(Plug.Conn.t()) :: Plug.Conn.t()
-      def ensure_unauthenticated(%Plug.Conn{} = conn) do
+      def ensure_unauthenticated(%Plug.Conn{} = conn, _opts \\ []) do
         if signed_in?(conn) do
           fallback(conn, :not_unauthenticated)
         else
@@ -129,7 +129,7 @@ defmodule Authenticator do
 
       """
       @spec authenticate_header(Plug.Conn.t()) :: Plug.Conn.t()
-      def authenticate_header(%Plug.Conn{} = conn) do
+      def authenticate_header(%Plug.Conn{} = conn, _opts \\ []) do
         case Plug.Conn.get_req_header(conn, "authorization") do
           ["Bearer " <> token] ->
             do_authenticate(conn, token)
@@ -163,7 +163,7 @@ defmodule Authenticator do
 
       """
       @spec authenticate_session(Plug.Conn.t()) :: Plug.Conn.t()
-      def authenticate_session(%Plug.Conn{} = conn) do
+      def authenticate_session(%Plug.Conn{} = conn, _opts \\ []) do
         case Plug.Conn.get_session(conn, @scope) do
           nil ->
             Plug.Conn.assign(conn, @scope, conn.assigns[@scope])
