@@ -49,5 +49,6 @@ defmodule Authenticator.Fixtures.Authority do
 
   @impl true
   def fallback(conn, _reason) do
+    conn
   end
 end

@@ -126,6 +126,36 @@ defmodule Authenticator do
       defp session_configured?(conn) do
         Map.has_key?(conn.private, :plug_session)
       end
+
+      Authenticator.defplug(__MODULE__, :Header)
+      Authenticator.defplug(__MODULE__, :Session)
+      Authenticator.defplug(__MODULE__, :Authenticated)
+      Authenticator.defplug(__MODULE__, :Unauthenticated)
+    end
+  end
+
+  @doc false
+  defmacro defplug(authenticator, name) do
+    plug = Module.concat(Authenticator, name)
+
+    quote bind_quoted: [name: name, plug: plug, authenticator: authenticator] do
+      authenticator
+      |> Module.concat(name)
+      |> Module.create(
+        quote do
+          @behaviour Plug
+          @moduledoc "See `#{unquote(plug)}`."
+
+          @impl Plug
+          def init(opts), do: opts
+
+          @impl Plug
+          def call(conn, opts) do
+            unquote(plug).call(conn, [{:with, unquote(authenticator)} | opts])
+          end
+        end,
+        Macro.Env.location(__ENV__)
+      )
     end
   end
 end

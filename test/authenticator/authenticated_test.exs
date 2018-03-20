@@ -17,7 +17,7 @@ defmodule Authenticator.AuthenticatedTest do
 
   describe "when the user is not signed in" do
     test "invokes the fallback with :not_authenticated", %{conn: conn} do
-      conn = Authenticated.call(conn, with: Success)
+      conn = Success.Authenticated.call(conn, [])
       assert conn.private.reason == :not_authenticated
     end
   end
