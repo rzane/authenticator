@@ -10,10 +10,10 @@ By using `Authenticator`, you'll get the following functions:
 
 You'll also get the following plugs:
 
-* `Authenticator.Session` - Authenticate a user from the session.
-* `Authenticator.Header` - Authenticate a user from the `Authorization` header.
-* `Authenticator.Authenticated` - Make sure a user is signed in.
-* `Authenticator.Unauthenticated` - Make sure a user is *not* signed in.
+* `plug :authenticate_session` - Authenticate a user from the session.
+* `plug :authenticate_header` - Authenticate a user from the `Authorization` header.
+* `plug :ensure_authenticated` - Make sure a user is signed in.
+* `plug :ensure_unauthenticated` - Make sure a user is *not* signed in.
 
 ## Installation
 
@@ -89,14 +89,15 @@ end
 All of the plugs provided by `Authenticator` expect your app's authenticator as an argument.
 
 ```elixir
+import MyAppWeb.Authenticator
+
 pipeline :browser do
   # snip...
-
-  plug Authenticator.Session, with: MyAppWeb.Authenticator
+  plug :authenticate_session
 end
 
 pipeline :authenticated do
-  plug Authenticator.Authenticated, with: MyAppWeb.Authenticator
+  plug :ensure_authenticated
 end
 
 scope "/", MyAppWeb do
