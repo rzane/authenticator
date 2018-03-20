@@ -1,7 +1,5 @@
 defmodule Authenticator.SessionTest do
   use Authenticator.ConnCase, async: true
-
-  alias Authenticator.Session
   alias Authenticator.Fixtures.{Success, Failure}
 
   describe "when the session is set" do
@@ -10,12 +8,12 @@ defmodule Authenticator.SessionTest do
     end
 
     test "successful authentication", %{conn: conn} do
-      conn = Session.call(conn, with: Success)
+      conn = Success.Session.call(conn, [])
       assert conn.assigns.current_user == "foobar"
     end
 
     test "unsuccessful authentication", %{conn: conn} do
-      conn = Session.call(conn, with: Failure)
+      conn = Failure.Session.call(conn, [])
       refute conn.assigns.current_user
       assert conn.private.reason == :authenticate
     end
@@ -23,7 +21,7 @@ defmodule Authenticator.SessionTest do
 
   describe "when the header is not set" do
     test "sets the user to nil", %{conn: conn} do
-      conn = Session.call(conn, with: Success)
+      conn = Success.Session.call(conn, [])
       assert conn.assigns.current_user == nil
       refute conn.private[:reason]
     end

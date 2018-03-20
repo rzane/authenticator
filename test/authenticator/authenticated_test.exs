@@ -1,7 +1,5 @@
 defmodule Authenticator.AuthenticatedTest do
   use Authenticator.ConnCase, async: true
-
-  alias Authenticator.Authenticated
   alias Authenticator.Fixtures.Success
 
   describe "when the user is signed in" do
@@ -10,7 +8,7 @@ defmodule Authenticator.AuthenticatedTest do
     end
 
     test "passes thru", %{conn: conn} do
-      conn = Authenticated.call(conn, with: Success)
+      conn = Success.Authenticated.call(conn, [])
       refute conn.private[:reason]
     end
   end

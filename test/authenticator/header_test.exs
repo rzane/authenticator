@@ -1,7 +1,5 @@
 defmodule Authenticator.HeaderTest do
   use Authenticator.ConnCase, async: true
-
-  alias Authenticator.Header
   alias Authenticator.Fixtures.{Success, Failure}
 
   describe "when the header is set" do
@@ -10,12 +8,12 @@ defmodule Authenticator.HeaderTest do
     end
 
     test "successful authentication", %{conn: conn} do
-      conn = Header.call(conn, with: Success)
+      conn = Success.Header.call(conn, [])
       assert conn.assigns.current_user == "foobar"
     end
 
     test "unsuccessful authentication", %{conn: conn} do
-      conn = Header.call(conn, with: Failure)
+      conn = Failure.Header.call(conn, [])
       refute conn.assigns.current_user
       assert conn.private.reason == :authenticate
     end
@@ -23,7 +21,7 @@ defmodule Authenticator.HeaderTest do
 
   describe "when the header is not set" do
     test "sets the user to nil", %{conn: conn} do
-      conn = Header.call(conn, with: Success)
+      conn = Success.Header.call(conn, [])
       assert conn.assigns.current_user == nil
       refute conn.private[:reason]
     end
