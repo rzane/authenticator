@@ -132,7 +132,7 @@ defmodule Authenticator do
       def authenticate_header(%Plug.Conn{} = conn, _opts \\ []) do
         case Plug.Conn.get_req_header(conn, "authorization") do
           ["Bearer " <> token] ->
-            do_authenticate(conn, token)
+            do_authenticate(conn, token, session: false)
 
           _ ->
             Plug.Conn.assign(conn, @scope, conn.assigns[@scope])
@@ -169,7 +169,7 @@ defmodule Authenticator do
             Plug.Conn.assign(conn, @scope, conn.assigns[@scope])
 
           token ->
-            do_authenticate(conn, token, session: false)
+            do_authenticate(conn, token)
         end
       end
 
