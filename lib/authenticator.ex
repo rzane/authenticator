@@ -61,7 +61,7 @@ defmodule Authenticator do
       end
 
       @doc """
-      Deletes the `#{inspect(@scope)}` from the session and sets`conn.assigns.#{@scope}`
+      Deletes the `#{inspect(@scope)}` from the session and sets `conn.assigns.#{@scope}`
       to `nil`.
       """
       @spec sign_out(Plug.Conn.t()) :: Plug.Conn.t()
@@ -97,7 +97,9 @@ defmodule Authenticator do
         end
       end
 
-      @doc "Verify that the conn is unauthenticated"
+      @doc """
+      Verify that the conn is unauthenticated
+      """
       @spec ensure_unauthenticated(Plug.Conn.t()) :: Plug.Conn.t()
       def ensure_unauthenticated(%Plug.Conn{} = conn) do
         if signed_in?(conn) do
