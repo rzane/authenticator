@@ -21,7 +21,7 @@ The package can be installed by adding `authenticator` to your list of dependenc
 
 ```elixir
 def deps do
-  [{:authenticator, "~> 0.1.0"}]
+  [{:authenticator, "~> 1.0.0"}]
 end
 ```
 
@@ -41,6 +41,7 @@ Here's an example implementation of an authenticator:
 defmodule MyAppWeb.Authenticator do
   use Authenticator
 
+  import Plug.Conn
   import Phoenix.Controller
   import MyAppWeb.Router.Helpers
 
@@ -69,10 +70,19 @@ defmodule MyAppWeb.Authenticator do
   end
 
   def fallback(conn, :not_authenticated) do
-    conn
-    |> put_flash(:error, "You need to sign in to continue.")
-    |> redirect(to: login_path(conn))
-    |> halt()
+    case get_format(conn) do
+      "html" ->
+        conn
+        |> put_flash(:error, "You need to sign in to continue.")
+        |> redirect(to: login_path(conn))
+        |> halt()
+
+      "json" ->
+        conn
+        |> put_status(401)
+        |> json(%{error: "You need to sign in to continue."})
+        |> halt()
+    end
   end
 
   def fallback(conn, :not_unauthenticated) do
@@ -84,9 +94,9 @@ defmodule MyAppWeb.Authenticator do
 end
 ```
 
-## Plugs
+## Session authentication
 
-All of the plugs provided by `Authenticator` expect your app's authenticator as an argument.
+In your router, you'll define your plugs like so:
 
 ```elixir
 import MyAppWeb.Authenticator
@@ -104,6 +114,66 @@ scope "/", MyAppWeb do
   pipe_through([:browser, :authenticated])
 
   # declare protected routes here
+end
+```
+
+The controller where you're implementing login might look like this:
+
+```elixir
+def create(conn, %{"email" => email, "password" => password}) do
+  with {:ok, user} <- MyApp.Accounts.authenticate({email, password}) do
+    conn
+    |> MyAppWeb.Authenticator.sign_in(user)
+    |> redirect(to: "/")
+  end
+end
+
+def destroy(conn, _params) do
+  conn
+  |> MyAppWeb.Authenticator.sign_out()
+  |> redirect(to: "/")
+end
+```
+
+## API authentication
+
+In your router, you'll define your plugs like so:
+
+```elixir
+import MyAppWeb.Authenticator
+
+pipeline :browser do
+  # snip...
+  plug :authenticate_header
+end
+
+pipeline :authenticated do
+  plug :ensure_authenticated
+end
+
+scope "/", MyAppWeb do
+  pipe_through([:browser, :authenticated])
+
+  # declare protected routes here
+end
+```
+
+The controller where you're implementing login might look like this:
+
+```elixir
+def create(conn, %{"email" => email, "password" => password}) do
+  with {:ok, user} <- MyApp.Accounts.authenticate({email, password}),
+       {:ok, token} <- MyAppWeb.Authenticator.tokenize(user) do
+    conn
+    |> MyAppWeb.Authenticator.sign_in(user, session: false)
+    |> json(%{token: token})
+  end
+end
+
+def destroy(conn, _params) do
+  conn
+  |> MyAppWeb.Authenticator.sign_out(session: false)
+  |> send_resp(204, "")
 end
 ```
 
