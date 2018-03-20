@@ -75,7 +75,9 @@ defmodule Authenticator do
       end
 
       @doc """
-      Verify that the conn is authenticated
+      Requires the user to be authenticated. If the
+      user is not authenticated, the `fallback/2` function will
+      be called with a reason of `:not_authenticated`.
       """
       @spec ensure_authenticated(Plug.Conn.t()) :: Plug.Conn.t()
       def ensure_authenticated(%Plug.Conn{} = conn) do
@@ -87,7 +89,9 @@ defmodule Authenticator do
       end
 
       @doc """
-      Verify that the conn is unauthenticated
+      Requires the user to *not* be unauthenticated. If the
+      user is authenticated, the `fallback/2` function will
+      be called with a reason of `:not_unauthenticated`.
       """
       @spec ensure_unauthenticated(Plug.Conn.t()) :: Plug.Conn.t()
       def ensure_unauthenticated(%Plug.Conn{} = conn) do
@@ -98,7 +102,32 @@ defmodule Authenticator do
         end
       end
 
-      @doc "Get the authorization header from the request"
+      @doc """
+      Authenticates a resource from the `Authorization` header. The
+      header is expected to conform to the following format:
+
+          Bearer <token>
+
+      If the header is not present or has an invalid format, this plug won't do anything.
+
+      ## Examples
+
+          pipeline :api do
+            # ... snip
+            plug :authenticate_header
+          end
+
+          pipeline :authenticated do
+            plug :ensure_authenticated
+          end
+
+          scope "/api" do
+            pipe_through [:api, :authenticated]
+
+            # protected routes here
+          end
+
+      """
       @spec authenticate_header(Plug.Conn.t()) :: Plug.Conn.t()
       def authenticate_header(%Plug.Conn{} = conn) do
         case Plug.Conn.get_req_header(conn, "authorization") do
@@ -110,7 +139,29 @@ defmodule Authenticator do
         end
       end
 
-      @doc "Fetch the token from the session"
+      @doc """
+      Authenticates a resource from the session.
+
+      If the header is not present or has an invalid format, this plug won't do anything.
+
+      ## Examples
+
+          pipeline :browser do
+            # ... snip
+            plug :authenticate_session
+          end
+
+          pipeline :authenticated do
+            plug :ensure_authenticated
+          end
+
+          scope "/" do
+            pipe_through [:browser, :authenticated]
+
+            # protected routes here
+          end
+
+      """
       @spec authenticate_session(Plug.Conn.t()) :: Plug.Conn.t()
       def authenticate_session(%Plug.Conn{} = conn) do
         case Plug.Conn.get_session(conn, @scope) do
