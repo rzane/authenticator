@@ -43,10 +43,10 @@ defmodule MyAppWeb.Authenticator do
 
   import Plug.Conn
   import Phoenix.Controller
-  import MyAppWeb.Router.Helpers
 
   alias MyApp.Repo
   alias MyApp.Accounts.User
+  alias MyAppWeb.Router.Helpers, as: Routes
 
   @impl true
   def tokenize(user) do
@@ -66,7 +66,7 @@ defmodule MyAppWeb.Authenticator do
 
   @impl true
   def fallback(conn, :not_found) do
-    conn |> redirect(to: login_path(conn)) |> halt()
+    conn |> redirect(to: Routes.login_path(conn)) |> halt()
   end
 
   def fallback(conn, :not_authenticated) do
@@ -74,7 +74,7 @@ defmodule MyAppWeb.Authenticator do
       "html" ->
         conn
         |> put_flash(:error, "You need to sign in to continue.")
-        |> redirect(to: login_path(conn))
+        |> redirect(to: Routes.login_path(conn))
         |> halt()
 
       "json" ->
@@ -88,7 +88,7 @@ defmodule MyAppWeb.Authenticator do
   def fallback(conn, :not_unauthenticated) do
     conn
     |> put_flash(:error, "You are already signed in.")
-    |> redirect(to: root_path(conn))
+    |> redirect(to: Routes.root_path(conn))
     |> halt()
   end
 end
