@@ -13,7 +13,7 @@ You'll also get the following plugs:
 * `plug :authenticate_session` - Authenticate a user from the session.
 * `plug :authenticate_header` - Authenticate a user from the `Authorization` header.
 * `plug :ensure_authenticated` - Make sure a user is signed in.
-* `plug :ensure_unauthenticated` - Make sure a user is *not* signed in.
+* `plug :ensure_unauthenticated` - Make sure a user is _not_ signed in.
 
 ## Installation
 
@@ -144,6 +144,44 @@ def destroy(conn, _params) do
 end
 ```
 
+## Fallback
+
+When an error occurs, the `call/2` function of your fallback will be called. This is where you'd handle errors.
+
+See [the Phoenix docs](https://hexdocs.pm/phoenix/Phoenix.Controller.html#action_fallback/1) for an example fallback controller.
+
+````elixir
+defmodule MyAppWeb.FallbackController do
+  use Phoenix.Controller
+  import MyAppWeb.Router.Helpers
+
+  # This would mean that the `:ensure_authenticated` plug failed.
+  def call(conn, {:error, :unauthenticated}) do
+    case get_format(conn) do
+      "html" ->
+        conn
+        |> put_flash(:error, "You need to sign in to continue.")
+        |> redirect(to: login_path(conn))
+        |> halt()
+
+      "json" ->
+        conn
+        |> put_status(401)
+        |> json(%{error: "You need to sign in to continue."})
+        |> halt()
+    end
+  end
+
+  # This would mean that the `:ensure_unauthenticated` plug failed.
+  def call(conn, {:error, :already_authenticated}) do
+    conn
+    |> put_flash(:error, "You are already signed in.")
+    |> redirect(to: page_path(conn, :index))
+    |> halt()
+  end
+end
+```
+
 ## Usage with Authority
 
 `Authenticator` works very nicely with [`Authority`](https://github.com/infinitered/authority) and [`Authority.Ecto`](https://github.com/infinitered/authority_ecto).
@@ -166,6 +204,6 @@ defmodule MyAppWeb.Authentication do
     MyApp.Accounts.authenticate(%MyApp.Accounts.Token{token: token})
   end
 end
-```
+````
 
-> *Note:* In the above example, we're serializing the user into a token. If you're using `Authority.Ecto`, tokens are stored in the database. The benefit of using a token (as opposed to the user's ID), is that we can revoke specific sessions by deleting tokens from the database.
+> _Note:_ In the above example, we're serializing the user into a token. If you're using `Authority.Ecto`, tokens are stored in the database. The benefit of using a token (as opposed to the user's ID), is that we can revoke specific sessions by deleting tokens from the database.
