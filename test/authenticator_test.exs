@@ -62,9 +62,9 @@ defmodule AuthenticatorTest do
   end
 
   describe "ensure_authenticated/1 - not signed in" do
-    test "invokes the fallback with :not_authenticated", %{conn: conn} do
+    test "invokes the fallback with :unauthenticated", %{conn: conn} do
       conn = Success.ensure_authenticated(conn)
-      assert conn.private.reason == :not_authenticated
+      assert conn.private.reason == :unauthenticated
     end
   end
 
@@ -123,9 +123,9 @@ defmodule AuthenticatorTest do
       [conn: Success.sign_in(conn, "foobar")]
     end
 
-    test "invokes the fallback with :not_unauthenticated", %{conn: conn} do
+    test "invokes the fallback with :already_authenticated", %{conn: conn} do
       conn = Success.ensure_unauthenticated(conn)
-      assert conn.private.reason == :not_unauthenticated
+      assert conn.private.reason == :already_authenticated
     end
   end
 

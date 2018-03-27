@@ -77,26 +77,26 @@ defmodule Authenticator do
       @doc """
       Requires the user to be authenticated. If the user is not
       authenticated, the `:fallback` will be called with a reason
-      of `{:error, :not_authenticated}`.
+      of `{:error, :unauthenticated}`.
       """
       @spec ensure_authenticated(Plug.Conn.t()) :: Plug.Conn.t()
       def ensure_authenticated(%Plug.Conn{} = conn, _opts \\ []) do
         if signed_in?(conn) do
           conn
         else
-          @fallback.call(conn, {:error, :not_authenticated})
+          @fallback.call(conn, {:error, :unauthenticated})
         end
       end
 
       @doc """
       Requires the user to *not* be unauthenticated. If the
       user is authenticated, the `:fallback` function will
-      be called with a reason of `{:error, :not_unauthenticated}`.
+      be called with a reason of `{:error, :already_authenticated}`.
       """
       @spec ensure_unauthenticated(Plug.Conn.t()) :: Plug.Conn.t()
       def ensure_unauthenticated(%Plug.Conn{} = conn, _opts \\ []) do
         if signed_in?(conn) do
-          @fallback.call(conn, {:error, :not_unauthenticated})
+          @fallback.call(conn, {:error, :already_authenticated})
         else
           conn
         end
