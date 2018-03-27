@@ -150,7 +150,7 @@ When an error occurs, the `call/2` function of your fallback will be called. Thi
 
 See [the Phoenix docs](https://hexdocs.pm/phoenix/Phoenix.Controller.html#action_fallback/1) for an example fallback controller.
 
-````elixir
+```elixir
 defmodule MyAppWeb.FallbackController do
   use Phoenix.Controller
   import MyAppWeb.Router.Helpers
@@ -204,6 +204,6 @@ defmodule MyAppWeb.Authentication do
     MyApp.Accounts.authenticate(%MyApp.Accounts.Token{token: token})
   end
 end
-````
+```
 
 > _Note:_ In the above example, we're serializing the user into a token. If you're using `Authority.Ecto`, tokens are stored in the database. The benefit of using a token (as opposed to the user's ID), is that we can revoke specific sessions by deleting tokens from the database.

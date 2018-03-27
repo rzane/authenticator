@@ -9,7 +9,7 @@ defmodule Authenticator.Mixfile do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      docs: [extras: ["README.md"]],
+      docs: [main: "README", extras: ["README.md"]],
       package: package()
     ]
   end

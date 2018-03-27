@@ -1,4 +1,34 @@
 defmodule Authenticator do
+  @moduledoc """
+  Generates a module for authenticating requests based on the `Plug.Conn`.
+
+  ### Example
+
+      defmodule MyAppWeb.Authentication do
+        use Authenticator, fallback: MyAppWeb.FallbackController
+
+        alias MyApp.Repo
+        alias MyApp.Accounts.User
+
+        @impl true
+        def tokenize(user) do
+          {:ok, to_string(user.id)}
+        end
+
+        @impl true
+        def authenticate(user_id) do
+          case Repo.get(User, user_id) do
+            nil ->
+              {:error, :unauthenticated}
+
+            user ->
+              {:ok, user}
+          end
+        end
+      end
+
+  """
+
   @type resource :: any()
   @type token :: String.t()
   @type reason :: atom()
