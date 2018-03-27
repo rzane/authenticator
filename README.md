@@ -31,22 +31,17 @@ To use `Authenticator`, you'll need to define the following functions:
 
 * `tokenize(resource)` - Serialize the user into a "token" that can be stored in the session.
 * `authenticate(resource)` - Given a "token", locate the user.
-* `fallback(conn, reason)` - Handle authentication errors.
 
 Here's an example implementation of an authenticator:
 
 ```elixir
-# lib/my_app_web/authenticator.ex
+# lib/my_app_web/authentication.ex
 
-defmodule MyAppWeb.Authenticator do
-  use Authenticator
-
-  import Plug.Conn
-  import Phoenix.Controller
+defmodule MyAppWeb.Authentication do
+  use Authenticator, fallback: MyAppWeb.FallbackController
 
   alias MyApp.Repo
   alias MyApp.Accounts.User
-  alias MyAppWeb.Router.Helpers, as: Routes
 
   @impl true
   def tokenize(user) do
@@ -57,39 +52,11 @@ defmodule MyAppWeb.Authenticator do
   def authenticate(user_id) do
     case Repo.get(User, user_id) do
       nil ->
-        {:error, :not_found}
+        {:error, :unauthenticated}
 
       user ->
         {:ok, user}
     end
-  end
-
-  @impl true
-  def fallback(conn, :not_found) do
-    conn |> redirect(to: Routes.login_path(conn)) |> halt()
-  end
-
-  def fallback(conn, :not_authenticated) do
-    case get_format(conn) do
-      "html" ->
-        conn
-        |> put_flash(:error, "You need to sign in to continue.")
-        |> redirect(to: Routes.login_path(conn))
-        |> halt()
-
-      "json" ->
-        conn
-        |> put_status(401)
-        |> json(%{error: "You need to sign in to continue."})
-        |> halt()
-    end
-  end
-
-  def fallback(conn, :not_unauthenticated) do
-    conn
-    |> put_flash(:error, "You are already signed in.")
-    |> redirect(to: Routes.root_path(conn))
-    |> halt()
   end
 end
 ```
@@ -123,14 +90,14 @@ The controller where you're implementing login might look like this:
 def create(conn, %{"email" => email, "password" => password}) do
   with {:ok, user} <- MyApp.Accounts.authenticate({email, password}) do
     conn
-    |> MyAppWeb.Authenticator.sign_in(user)
+    |> MyAppWeb.Authentication.sign_in(user)
     |> redirect(to: "/")
   end
 end
 
 def destroy(conn, _params) do
   conn
-  |> MyAppWeb.Authenticator.sign_out()
+  |> MyAppWeb.Authentication.sign_out()
   |> redirect(to: "/")
 end
 ```
@@ -140,7 +107,7 @@ end
 In your router, you'll define your plugs like so:
 
 ```elixir
-import MyAppWeb.Authenticator
+import MyAppWeb.Authentication
 
 pipeline :browser do
   # snip...
@@ -165,37 +132,38 @@ def create(conn, %{"email" => email, "password" => password}) do
   with {:ok, user} <- MyApp.Accounts.authenticate({email, password}),
        {:ok, token} <- MyAppWeb.Authenticator.tokenize(user) do
     conn
-    |> MyAppWeb.Authenticator.sign_in(user, session: false)
+    |> MyAppWeb.Authentication.sign_in(user, session: false)
     |> json(%{token: token})
   end
 end
 
 def destroy(conn, _params) do
   conn
-  |> MyAppWeb.Authenticator.sign_out(session: false)
+  |> MyAppWeb.Authentication.sign_out(session: false)
   |> send_resp(204, "")
 end
 ```
 
 ## Usage with Authority
 
-`Authenticator` supports [`Authority`](https://github.com/infinitered/authority) and [`Authority.Ecto`](https://github.com/infinitered/authority_ecto) out of the box.
+`Authenticator` works very nicely with [`Authority`](https://github.com/infinitered/authority) and [`Authority.Ecto`](https://github.com/infinitered/authority_ecto).
 
-Here's an example authenticator that takes advantage of `Autenticator.Authority`:
+Here's an example authenticator:
 
 ```elixir
-defmodule MyAppWeb.Authenticator do
-  use Authenticator
-  use Authenticator.Authority,
-    token_schema: Accounts.Token,
-    tokenization: Accounts,
-    authentication: Accounts
+defmodule MyAppWeb.Authentication do
+  use Authenticator, fallback: MyAppWeb.FallbackController
 
   @impl true
-  def fallback(conn, _reason) do
-    conn
-    |> Plug.Conn.redirect(to: "/login")
-    |> Plug.Conn.halt()
+  def tokenize(user) do
+    with {:ok, token} <- MyApp.Accounts.tokenize(user) do
+      {:ok, token.token}
+    end
+  end
+
+  @impl true
+  def authenticate(token) do
+    MyApp.Accounts.authenticate(%MyApp.Accounts.Token{token: token})
   end
 end
 ```

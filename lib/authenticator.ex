@@ -5,19 +5,19 @@ defmodule Authenticator do
 
   @callback tokenize(resource) :: {:ok, token} | {:error, reason}
   @callback authenticate(token) :: {:ok, resource} | {:error, reason}
-  @callback fallback(conn :: Plug.Conn.t(), reason) :: Plug.Conn.t()
 
   defmacro __using__(config) do
     quote location: :keep do
       @behaviour Authenticator
 
       @scope Keyword.get(unquote(config), :scope, :current_user)
+      @fallback Keyword.fetch!(unquote(config), :fallback)
 
       @doc """
       Stores the `#{@scope}` in the session and sets `conn.assigns.#{@scope}`.
 
       If `tokenize/1` fails with `{:error, reason}`, the #{@scope} will be
-      signed out and `fallback/2` will be invoked.
+      signed out and the `:fallback` will be invoked.
 
       ## Options
 
@@ -40,7 +40,7 @@ defmodule Authenticator do
           {:error, reason} ->
             conn
             |> sign_out(opts)
-            |> fallback(reason)
+            |> @fallback.call({:error, reason})
         end
       end
 
@@ -75,28 +75,28 @@ defmodule Authenticator do
       end
 
       @doc """
-      Requires the user to be authenticated. If the
-      user is not authenticated, the `fallback/2` function will
-      be called with a reason of `:not_authenticated`.
+      Requires the user to be authenticated. If the user is not
+      authenticated, the `:fallback` will be called with a reason
+      of `{:error, :not_authenticated}`.
       """
       @spec ensure_authenticated(Plug.Conn.t()) :: Plug.Conn.t()
       def ensure_authenticated(%Plug.Conn{} = conn, _opts \\ []) do
         if signed_in?(conn) do
           conn
         else
-          fallback(conn, :not_authenticated)
+          @fallback.call(conn, {:error, :not_authenticated})
         end
       end
 
       @doc """
       Requires the user to *not* be unauthenticated. If the
-      user is authenticated, the `fallback/2` function will
-      be called with a reason of `:not_unauthenticated`.
+      user is authenticated, the `:fallback` function will
+      be called with a reason of `{:error, :not_unauthenticated}`.
       """
       @spec ensure_unauthenticated(Plug.Conn.t()) :: Plug.Conn.t()
       def ensure_unauthenticated(%Plug.Conn{} = conn, _opts \\ []) do
         if signed_in?(conn) do
-          fallback(conn, :not_unauthenticated)
+          @fallback.call(conn, {:error, :not_unauthenticated})
         else
           conn
         end
@@ -181,7 +181,7 @@ defmodule Authenticator do
           {:error, reason} ->
             conn
             |> sign_out(opts)
-            |> fallback(reason)
+            |> @fallback.call({:error, reason})
         end
       end
     end
