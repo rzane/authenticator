@@ -21,5 +21,5 @@ defmodule Authenticator.Fixtures.Failure do
   def tokenize(_), do: {:error, :tokenize}
 
   @impl true
-  def authenticate(_), do: {:error, :authenticate}
+  def authenticate(_), do: {:error, :fixture_failure}
 end

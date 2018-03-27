@@ -81,7 +81,7 @@ defmodule AuthenticatorTest do
     test "unsuccessful authentication", %{conn: conn} do
       conn = Failure.authenticate_header(conn)
       refute conn.assigns.current_user
-      assert conn.private.reason == :authenticate
+      assert conn.private.reason == :fixture_failure
     end
   end
 
@@ -106,7 +106,7 @@ defmodule AuthenticatorTest do
     test "unsuccessful authentication", %{conn: conn} do
       conn = Failure.authenticate_session(conn)
       refute conn.assigns.current_user
-      assert conn.private.reason == :authenticate
+      assert conn.private.reason == :fixture_failure
     end
   end
 
